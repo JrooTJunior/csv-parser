@@ -1,5 +1,4 @@
 import csv
-import datetime
 import time
 from config import *
 
@@ -12,8 +11,6 @@ def parser():
     start = time.time()
     # Results
     dictionary = {}
-
-    date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d')
 
     # Data loader
     with open(input_file, 'r') as csvfile:
@@ -35,8 +32,9 @@ def parser():
     # Saving data
     current = 0
     for item in dictionary:
-        with open(out_format.format(date=date, key=item), 'a', newline='') as outfile:
+        with open(out_format.format(key=item), 'a', newline='') as outfile:
             writer = csv.writer(outfile, delimiter="|", quoting=csv.QUOTE_NONE, quotechar='')
+            writer.writerow(get_header(item))
             for line in dictionary[item]:
                 writer.writerow([dictionary[item][dictionary[item].index(line)]])
                 if current % MSG_LIMITER == 0 and current:
@@ -45,7 +43,14 @@ def parser():
             # Print statistic
     print('Saved {count} object(s).'.format(count=len(dictionary)))
     finish = time.time()
-    print('\n\tDone! ({time:.2})'.format(time=finish - start))
+    print('\n\tDone! ({time:.2f})'.format(time=finish - start))
+
+
+def get_header(key):
+    result = []
+    for field in out_header:
+        result.append(out_header[out_header.index(field)].format(key=key))
+    return result
 
 
 def clear_out():
@@ -55,13 +60,12 @@ def clear_out():
     print('Cleaning output directory..')
 
     # scan output folder
-    files = glob.glob(out_dir + '/*.' + out_file_type)
+    files = glob.glob(out_dir + '/*.' + file_type)
     for f in files:
         os.remove(f)
     print('Removed {count} files.'.format(count=len(files)))
     time.sleep(2)
 
 if __name__ == '__main__':
-    print('Pre-processing method')
     clear_out()
     parser()
